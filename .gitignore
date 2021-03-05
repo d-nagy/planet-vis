@@ -2,3 +2,6 @@
 __pycache__/
 vtkExamples/
 data/
+*.png
+*.tif
+*.jpg
