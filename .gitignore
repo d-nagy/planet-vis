@@ -1,6 +1,6 @@
 .vscode/
 __pycache__/
-vtkExamples/
+dev/
 data/
 *.png
 *.tif
