@@ -1,11 +1,13 @@
 import numpy as np
 from enum import Enum, auto
 
+
 class ColorMetric(Enum):
     L2NORM = auto()
     L1NORM = auto()
     MSE = auto()
     MAE = auto()
+
 
 def orthographic(r, lmbda, phi, lmbda0=0, phi0=0):
     '''
@@ -93,7 +95,8 @@ def interpColormap(colormap: np.ndarray, pointsPerSample: int, isHsv=False):
                 diffs[:, 0][np.abs(diffs[:, 0]) > 90] = shortcuts
 
         idx = starts * (pointsPerSample+1) + i
-        interp[idx] = (signedCmap[starts] + i * (diffs/(pointsPerSample+1))) % limits
+        interp[idx] = (signedCmap[starts] +
+                       i * (diffs/(pointsPerSample+1))) % limits
 
     interp = np.around(interp).astype(colormap.dtype)
     interp = stableUnique(interp, axis=0)
@@ -122,27 +125,29 @@ def findNearestColorIdx(colors: np.ndarray, colormap: np.ndarray,
                         metric=ColorMetric.L1NORM, weights=[1, 1, 1]):
     if metric == ColorMetric.L2NORM:
         idx = np.linalg.norm(
-            (colormap[np.newaxis,:,:] - colors[:,np.newaxis,:]) * weights,
+            (colormap[np.newaxis, :, :] - colors[:, np.newaxis, :]) * weights,
             2,
             axis=-1
         ).argmin(axis=-1)
 
     elif metric == ColorMetric.L1NORM:
         idx = np.linalg.norm(
-            (colormap[np.newaxis,:,:] - colors[:,np.newaxis,:]) * weights,
+            (colormap[np.newaxis, :, :] - colors[:, np.newaxis, :]) * weights,
             1,
             axis=-1
         ).argmin(axis=-1)
 
     elif metric == ColorMetric.MSE:
         idx = np.mean(
-            ((colormap[np.newaxis,:,:] - colors[:,np.newaxis,:]) * weights)**2,
+            ((colormap[np.newaxis, :, :] -
+              colors[:, np.newaxis, :]) * weights)**2,
             axis=-1
         ).argmin(axis=-1)
 
     elif metric == ColorMetric.MAE:
         idx = np.mean(
-            np.abs((colormap[np.newaxis,:,:] - colors[:,np.newaxis,:]) * weights),
+            np.abs((colormap[np.newaxis, :, :] -
+                    colors[:, np.newaxis, :]) * weights),
             axis=-1
         ).argmin(axis=-1)
 
@@ -157,7 +162,6 @@ def getHeightFromCmapIdx(idx, colormap, heightRange):
     return np.linspace(start, stop, len(colormap))[idx]
 
 
-
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import matplotlib.gridspec as gridspec
@@ -169,7 +173,8 @@ if __name__ == '__main__':
     xs, ys = orthographic(r, lv, pv)
 
     fig = plt.figure(figsize=[8, 12])
-    gs = gridspec.GridSpec(nrows=2, ncols=2, width_ratios=[1, 1], height_ratios=[1, 2])
+    gs = gridspec.GridSpec(nrows=2, ncols=2,
+                           width_ratios=[1, 1], height_ratios=[1, 2])
 
     ax1 = fig.add_subplot(gs[0, 0])
     ax1.scatter(lv, pv, c=np.arange(len(lmbdas)**2), cmap='plasma')
@@ -188,6 +193,9 @@ if __name__ == '__main__':
     ax3 = fig.add_subplot(gs[1, :], projection='3d')
     ax3.scatter(xs, ys, zs, c=np.arange(len(lmbdas)**2), cmap='plasma')
     ax3.set_box_aspect((1, 2, 2))
-    ax3.set_title('projected (x, y) -> inverse projected (r, long., lat.) -> converted (x, y, z)', y=-0.2)
+    ax3.set_title(
+        'projected (x, y) -> inverse projected (r, long., lat.) -> converted (x, y, z)',
+        y=-0.2
+    )
     ax3.set(xlabel='x', ylabel='y', zlabel='z')
     plt.show()

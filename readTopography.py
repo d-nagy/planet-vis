@@ -1,6 +1,7 @@
 import cv2
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+
 from utils import *
 
 heightRange = np.array([-8000, 14000])
@@ -34,10 +35,13 @@ rawCmap = img[
 medianCmap = []
 for i in range(0, len(rawCmap), cmapSegmentWidth):
     segment = np.copy(rawCmap[i:i+cmapSegmentWidth])
-    isCmapDivider = [all(np.greater(segColor, cmapDividerColour)) for segColor in segment]
+    isCmapDivider = [all(np.greater(segColor, cmapDividerColour))
+                     for segColor in segment]
     if any(isCmapDivider):
         centerIndex = np.argmax(segment, axis=0)[0]
-        segment = np.concatenate((segment[:centerIndex-2], segment[centerIndex+3:]))
+        segment = np.concatenate(
+            (segment[:centerIndex-2], segment[centerIndex+3:])
+        )
     medianCmap.append(np.median(segment, axis=0))
 
 medianCmap = stableUnique(np.array(medianCmap).astype(img.dtype), axis=0)
@@ -95,13 +99,17 @@ fig = plt.figure(figsize=[10, 10])
 ax = fig.add_subplot(projection='3d')
 
 wxs, wys = getOrthHemisphereXYCoords(westHemiSmall)
-exs, eys =getOrthHemisphereXYCoords(eastHemiSmall)
+exs, eys = getOrthHemisphereXYCoords(eastHemiSmall)
 
 wcs = getHemispherePixels(westHemiSmall)
 ecs = getHemispherePixels(eastHemiSmall)
 
-r, wlmbdas, wphis = inverseOrthographic(wxs, wys, max(hemisphereDims)//sf / 2, lmbda0=-90)
-_, elmbdas, ephis = inverseOrthographic(exs, eys, max(hemisphereDims)//sf / 2, lmbda0=90)
+r, wlmbdas, wphis = inverseOrthographic(
+    wxs, wys, max(hemisphereDims)//sf / 2, lmbda0=-90
+)
+_, elmbdas, ephis = inverseOrthographic(
+    exs, eys, max(hemisphereDims)//sf / 2, lmbda0=90
+)
 
 lmbdas = np.concatenate((wlmbdas, elmbdas))
 phis = np.concatenate((wphis, ephis))
@@ -109,7 +117,9 @@ phis = np.concatenate((wphis, ephis))
 csBgr = np.concatenate((wcs, ecs))
 csHsv = cv2.cvtColor(np.array([csBgr]), cv2.COLOR_BGR2HSV)[0]
 
-mappedCsHsvIdx = findNearestColorIdx(csHsv, cmapHsv, metric=ColorMetric.L2NORM, weights=[4, 1, 2])
+mappedCsHsvIdx = findNearestColorIdx(
+    csHsv, cmapHsv, metric=ColorMetric.L2NORM, weights=[4, 1, 2]
+)
 # mappedCsBgrIdx = findNearestColorIdx(csBgr, cmapBgr)
 
 #
@@ -149,7 +159,9 @@ heightMapHsv = r + 0.0005 * altitudesHsv
 xs, ys, zs = geoToCartesian(heightMapHsv, lmbdas, phis)
 
 # ax.scatter(xs, ys, zs, s=1, c=np.flip(mappedCsBgr, axis=-1)/255.0)
-ax.scatter(xs, ys, zs, s=1, c=cv2.cvtColor(np.array([mappedCsHsv]), cv2.COLOR_HSV2RGB)[0]/255.0)
+ax.scatter(xs, ys, zs, s=1, c=cv2.cvtColor(
+    np.array([mappedCsHsv]), cv2.COLOR_HSV2RGB)[0]/255.0
+)
 ax.set_box_aspect((2, 2, 2))
 ax.set(xlabel='x', ylabel='y', zlabel='z')
 plt.show()
