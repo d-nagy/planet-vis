@@ -46,9 +46,9 @@ def inverseOrthographic(x, y, r, lmbda0=0, phi0=0):
     tempRho = np.copy(rho)
     tempRho[rho == 0] = 1
     p = np.arcsin(cc*sp0 + y*sc*cp0/tempRho)
-    l = l0 + np.arctan2(x*sc, rho*cc*cp0 - y*sc*sp0)
+    lm = l0 + np.arctan2(x*sc, rho*cc*cp0 - y*sc*sp0)
 
-    lmbda, phi = np.degrees(l), np.degrees(p)
+    lmbda, phi = np.degrees(lm), np.degrees(p)
 
     return r, lmbda, phi
 
@@ -118,7 +118,9 @@ def getOrthHemisphereXYCoords(hemisphere: np.ndarray):
 
 
 def getHemispherePixels(hemisphere: np.ndarray):
-    return hemisphere[np.where(np.all(np.greater(hemisphere, np.zeros(3)), axis=-1))]
+    return hemisphere[
+        np.where(np.all(np.greater(hemisphere, np.zeros(3)), axis=-1))
+    ]
 
 
 def findNearestColorIdx(colors: np.ndarray, colormap: np.ndarray,
@@ -188,13 +190,14 @@ if __name__ == '__main__':
 
     rs, lmbdas, phis = inverseOrthographic(xs, ys, r)
     xs, ys, zs = geoToCartesian(rs, lmbdas, phis)
-    #xs, ys, zs = geoToCartesian(rs, lv, pv)
+    # xs, ys, zs = geoToCartesian(rs, lv, pv)
 
     ax3 = fig.add_subplot(gs[1, :], projection='3d')
     ax3.scatter(xs, ys, zs, c=np.arange(len(lmbdas)**2), cmap='plasma')
     ax3.set_box_aspect((1, 2, 2))
     ax3.set_title(
-        'projected (x, y) -> inverse projected (r, long., lat.) -> converted (x, y, z)',
+        'projected (x, y) -> inverse projected (r, long., lat.) \
+         -> converted (x, y, z)',
         y=-0.2
     )
     ax3.set(xlabel='x', ylabel='y', zlabel='z')

@@ -1,10 +1,14 @@
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy import spatial
+import vtk
 
-from utils import *
+import utils
 
 heightRange = np.array([-8000, 14000])
+R = 3389500
+sfR = 0.001
 
 cmapX = np.array([654, 2296])
 cmapDims = np.array([2682, 97])
@@ -18,7 +22,6 @@ hemisphereDims = np.array([1962, 1960])
 sf = 8
 
 img = cv2.imread('data/elevationData.tif')
-# img = cv2.imread('data/elevationData_colour_enhanced.tif')
 width = int(img.shape[1] / sf)
 height = int(img.shape[0] / sf)
 smallImg = cv2.resize(img, (width, height), interpolation=cv2.INTER_AREA)
@@ -44,17 +47,21 @@ for i in range(0, len(rawCmap), cmapSegmentWidth):
         )
     medianCmap.append(np.median(segment, axis=0))
 
-medianCmap = stableUnique(np.array(medianCmap).astype(img.dtype), axis=0)
+medianCmap = utils.stableUnique(np.array(medianCmap).astype(img.dtype), axis=0)
 medianCmapHsv = cv2.cvtColor(np.array([medianCmap]), cv2.COLOR_BGR2HSV)[0]
 
-cmapBgr = interpColormap(medianCmap, 5)
-cmapHsv = interpColormap(medianCmapHsv, 10, isHsv=True)
+cmapBgr = utils.interpColormap(medianCmap, 5)
+cmapHsv = utils.interpColormap(medianCmapHsv, 10, isHsv=True)
 
 
-westHemi = getBoxRegion(img, westHemisphereX, hemisphereDims)
-eastHemi = getBoxRegion(img, eastHemisphereX, hemisphereDims)
-westHemiSmall = getBoxRegion(smallImg, westHemisphereX//sf, hemisphereDims//sf)
-eastHemiSmall = getBoxRegion(smallImg, eastHemisphereX//sf, hemisphereDims//sf)
+westHemi = utils.getBoxRegion(img, westHemisphereX, hemisphereDims)
+eastHemi = utils.getBoxRegion(img, eastHemisphereX, hemisphereDims)
+westHemiSmall = utils.getBoxRegion(
+    smallImg, westHemisphereX//sf, hemisphereDims//sf
+)
+eastHemiSmall = utils.getBoxRegion(
+    smallImg, eastHemisphereX//sf, hemisphereDims//sf
+)
 
 #
 # Plot RGB cube with colormap embedded as a black line
@@ -98,16 +105,16 @@ eastHemiSmall = getBoxRegion(smallImg, eastHemisphereX//sf, hemisphereDims//sf)
 fig = plt.figure(figsize=[10, 10])
 ax = fig.add_subplot(projection='3d')
 
-wxs, wys = getOrthHemisphereXYCoords(westHemiSmall)
-exs, eys = getOrthHemisphereXYCoords(eastHemiSmall)
+wxs, wys = utils.getOrthHemisphereXYCoords(westHemiSmall)
+exs, eys = utils.getOrthHemisphereXYCoords(eastHemiSmall)
 
-wcs = getHemispherePixels(westHemiSmall)
-ecs = getHemispherePixels(eastHemiSmall)
+wcs = utils.getHemispherePixels(westHemiSmall)
+ecs = utils.getHemispherePixels(eastHemiSmall)
 
-r, wlmbdas, wphis = inverseOrthographic(
+_, wlmbdas, wphis = utils.inverseOrthographic(
     wxs, wys, max(hemisphereDims)//sf / 2, lmbda0=-90
 )
-_, elmbdas, ephis = inverseOrthographic(
+_, elmbdas, ephis = utils.inverseOrthographic(
     exs, eys, max(hemisphereDims)//sf / 2, lmbda0=90
 )
 
@@ -117,54 +124,51 @@ phis = np.concatenate((wphis, ephis))
 csBgr = np.concatenate((wcs, ecs))
 csHsv = cv2.cvtColor(np.array([csBgr]), cv2.COLOR_BGR2HSV)[0]
 
-mappedCsHsvIdx = findNearestColorIdx(
-    csHsv, cmapHsv, metric=ColorMetric.L2NORM, weights=[4, 1, 2]
+mappedCsHsvIdx = utils.findNearestColorIdx(
+    csHsv, cmapHsv, metric=utils.ColorMetric.L2NORM, weights=[4, 1, 2]
 )
-# mappedCsBgrIdx = findNearestColorIdx(csBgr, cmapBgr)
 
-#
-# East hemisphere altitudes
-#
-# mappedWcsHsvIdx = findNearestColorIdx(cv2.cvtColor(np.array([ecs]), cv2.COLOR_BGR2HSV)[0], cmapHsv)
-# mappedWcsHsv = cmapHsv[mappedWcsHsvIdx]
-# wAltitudes = getHeightFromCmapIdx(mappedWcsHsvIdx, cmapHsv, heightRange)
-# wAltPixels = (wAltitudes-heightRange.min())/((heightRange.max()-heightRange.min())/255.0)
-# wAltPixels = (np.around(wAltPixels)).astype(img.dtype)
-
-# nonzeroCounts = np.count_nonzero(np.count_nonzero(westHemiSmall, axis=-1), axis=-1)
-# splitIndices = np.cumsum(nonzeroCounts) - 5
-# wAltImg = []
-# for row in np.split(wAltPixels, splitIndices):
-#     newRowLen = westHemiSmall.shape[1]
-#     spaceToFill = newRowLen - len(row)
-#     if (spaceToFill) % 2 == 0:
-#         pad = spaceToFill // 2
-#     else:
-#         pad = ((spaceToFill // 2 + 1), spaceToFill // 2)
-
-#     wAltImg.append(np.pad(row, pad, 'constant'))
-
-# wAltImg = np.array(wAltImg)
-
-# diffs = np.abs(mappedCsBgrIdx-mappedCsHsvIdx)
-
-# mappedCsBgr = cmapBgr[mappedCsBgrIdx]
 mappedCsHsv = cmapHsv[mappedCsHsvIdx]
 
-# altitudesBgr = getHeightFromCmapIdx(mappedCsBgrIdx, cmapBgr, heightRange)
-altitudesHsv = getHeightFromCmapIdx(mappedCsHsvIdx, cmapHsv, heightRange)
-# heightMapBgr = r + 0.0005 * altitudesBgr
-heightMapHsv = r + 0.0005 * altitudesHsv
+altitudesHsv = utils.getHeightFromCmapIdx(mappedCsHsvIdx, cmapHsv, heightRange)
 
-xs, ys, zs = geoToCartesian(heightMapHsv, lmbdas, phis)
+xs, ys, zs = utils.geoToCartesian(R * sfR, lmbdas, phis)
 
-# ax.scatter(xs, ys, zs, s=1, c=np.flip(mappedCsBgr, axis=-1)/255.0)
-ax.scatter(xs, ys, zs, s=1, c=cv2.cvtColor(
-    np.array([mappedCsHsv]), cv2.COLOR_HSV2RGB)[0]/255.0
-)
-ax.set_box_aspect((2, 2, 2))
-ax.set(xlabel='x', ylabel='y', zlabel='z')
-plt.show()
+heightCoords = np.array([xs, ys, zs]).T
+tree = spatial.KDTree(heightCoords)
+
+sphereSource = vtk.vtkSphereSource()
+sphereSource.SetRadius(R * sfR)
+sphereSource.SetStartTheta(1e-5)
+sphereSource.SetThetaResolution(500)
+sphereSource.SetPhiResolution(500)
+sphereSource.Update()
+
+sphereHeights = vtk.vtkDoubleArray()
+sphereHeights.SetName('Heights')
+numPoints = sphereSource.GetOutput().GetNumberOfPoints()
+sphereHeights.SetNumberOfTuples(numPoints)
+spherePointsArray = sphereSource.GetOutput().GetPoints().GetData()
+for i in range(numPoints):
+    point = spherePointsArray.GetTuple3(i)
+    heightIdx = tree.query([point])[-1][0]
+    sphereHeights.SetTuple1(i, altitudesHsv[heightIdx] * sfR)
+sphereSource.GetOutput().GetPointData().SetScalars(sphereHeights)
+
+vtkWriter = vtk.vtkXMLPolyDataWriter()
+vtkWriter.SetFileName('marstopo.vtp')
+vtkWriter.SetInputData(sphereSource.GetOutput())
+vtkWriter.Write()
+
+# heightMapHsv = (R + altitudesHsv) * sfR
+# xs, ys, zs = utils.geoToCartesian(heightMapHsv, lmbdas, phis)
+
+# ax.scatter(xs, ys, zs, s=1, c=cv2.cvtColor(
+#     np.array([mappedCsHsv]), cv2.COLOR_HSV2RGB)[0]/255.0
+# )
+# ax.set_box_aspect((2, 2, 2))
+# ax.set(xlabel='x', ylabel='y', zlabel='z')
+# plt.show()
 
 
 #
