@@ -1,6 +1,10 @@
 import sys
 import vtk
 
+HEIGHT_RANGE = [-8000, 14000]
+R = 3389500
+sfR = 0.001
+
 
 class SliderCBScaleFactor:
     def __init__(self, warpFilter):
@@ -37,25 +41,26 @@ mapToSphere = vtk.vtkTextureMapToSphere()
 mapToSphere.SetInputConnection(polyReader.GetOutputPort())
 mapToSphere.PreventSeamOff()
 
+# Warp the sphere surface based on the scalar height data
 warp = vtk.vtkWarpScalar()
 warp.SetInputConnection(mapToSphere.GetOutputPort())
-warp.SetScaleFactor(1)
+warp.SetScaleFactor(10)
 warp.Update()
 
 # Create mapper and set the mapped texture as input
-mapper = vtk.vtkPolyDataMapper()
-mapper.SetInputConnection(warp.GetOutputPort())
-mapper.ScalarVisibilityOff()
+marsMapper = vtk.vtkPolyDataMapper()
+marsMapper.SetInputConnection(warp.GetOutputPort())
+marsMapper.ScalarVisibilityOff()  # Important for rendering the texture properly
 
 # Create actor and set the mapper and the texture
-actor = vtk.vtkActor()
-actor.SetMapper(mapper)
-actor.SetTexture(texture)
-actor.RotateX(90-25)
+marsActor = vtk.vtkActor()
+marsActor.SetMapper(marsMapper)
+marsActor.SetTexture(texture)
+marsActor.RotateX(90-25)
 
 # Create a renderer
 renderer = vtk.vtkRenderer()
-renderer.AddActor(actor)
+renderer.AddActor(marsActor)
 
 # Setup render window
 renderWindow = vtk.vtkRenderWindow()
@@ -77,7 +82,7 @@ renderWindow.Render()
 # -- GUI slider --
 # Make rep
 slider = vtk.vtkSliderRepresentation2D()
-slider.SetTitleText('Height map scale factor')
+slider.SetTitleText('Relief scale factor')
 
 slider.SetMinimumValue(1)
 slider.SetMaximumValue(30)

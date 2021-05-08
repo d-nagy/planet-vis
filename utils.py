@@ -164,6 +164,23 @@ def getHeightFromCmapIdx(idx, colormap, heightRange):
     return np.linspace(start, stop, len(colormap))[idx]
 
 
+def makeVtkSliderRep(title, minValue, maxValue, startValue, x, y):
+    import vtk
+    slider = vtk.vtkSliderRepresentation2D()
+    slider.SetTitleText(title)
+
+    slider.SetMinimumValue(minValue)
+    slider.SetMaximumValue(maxValue)
+    slider.SetValue(startValue)
+
+    slider.GetPoint1Coordinate().SetCoordinateSystemToNormalizedDisplay()
+    slider.GetPoint1Coordinate().SetValue(x, y)
+    slider.GetPoint2Coordinate().SetCoordinateSystemToNormalizedDisplay()
+    slider.GetPoint2Coordinate().SetValue(x + 0.2, y)
+
+    return slider
+
+
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import matplotlib.gridspec as gridspec
