@@ -70,6 +70,7 @@ renderWindow.SetSize(1280, 720)
 # Setup interactor
 interactor = vtk.vtkRenderWindowInteractor()
 interactor.SetRenderWindow(renderWindow)
+interactor.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
 
 # Setup camera
 activeCam = renderer.GetActiveCamera()
