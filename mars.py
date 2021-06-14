@@ -1,8 +1,7 @@
 import sys
 import vtk
 
-HEIGHT_RANGE = [-8000, 14000]
-R = 3389500
+
 sfR = 0.001
 
 
@@ -50,7 +49,7 @@ warp.Update()
 # Create mapper and set the mapped texture as input
 marsMapper = vtk.vtkPolyDataMapper()
 marsMapper.SetInputConnection(warp.GetOutputPort())
-marsMapper.ScalarVisibilityOff()  # Important for rendering the texture properly
+marsMapper.ScalarVisibilityOff()  # Important for rendering texture properly
 
 # Create actor and set the mapper and the texture
 marsActor = vtk.vtkActor()

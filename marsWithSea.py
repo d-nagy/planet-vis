@@ -1,8 +1,9 @@
 import sys
 import vtk
 import utils
+import numpy as np
 
-HEIGHT_RANGE = [-8000, 14000]
+
 R = 3389500
 sfR = 0.001
 warpScale = 10
@@ -37,6 +38,8 @@ textureFile = sys.argv[2]
 polyReader = vtk.vtkXMLPolyDataReader()
 polyReader.SetFileName(topoFile)
 polyReader.Update()
+hMin, hMax = polyReader.GetOutput().GetPointData().GetScalars().GetRange()
+hMin, hMax = int(np.ceil(hMin) / sfR), int(np.floor(hMax) / sfR)
 
 normalVectors = vtk.vtkFloatArray()
 normalVectors.DeepCopy(polyReader.GetOutput().GetPointData().GetNormals())
@@ -74,12 +77,12 @@ warpAboveSea.SetInputConnection(clip.GetOutputPort(0))  # Above the sea
 warpAboveSea.SetScaleFactor(warpScale)
 
 # Separate above and below sea ever so slightly
-# sinkUndersea = vtk.vtkWarpVector()
-# sinkUndersea.SetInputConnection(clip.GetOutputPort(1))
-# sinkUndersea.SetScaleFactor(-10)
+sinkUndersea = vtk.vtkWarpVector()
+sinkUndersea.SetInputConnection(clip.GetOutputPort(1))
+sinkUndersea.SetScaleFactor(-10)
 
 warpBelowSea = vtk.vtkWarpScalar()
-warpBelowSea.SetInputConnection(clip.GetOutputPort(1))  # Below the sea
+warpBelowSea.SetInputConnection(sinkUndersea.GetOutputPort())  # Below the sea
 warpBelowSea.SetScaleFactor(warpScale)
 
 sinkSea = vtk.vtkWarpVector()
@@ -159,7 +162,7 @@ cb = SliderCBScaleFactor(warpAboveSea, warpBelowSea)
 sfSlider.AddObserver(vtk.vtkCommand.InteractionEvent, cb)
 
 seaLevelSliderRep = utils.makeVtkSliderRep(
-    'Sea Level (km)', -8, 14, 0, 0.05, 0.3
+    'Sea Level (km)', hMin * sfR, hMax * sfR, 0, 0.05, 0.3
 )
 
 seaLevelSlider = vtk.vtkSliderWidget()

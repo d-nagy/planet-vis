@@ -113,8 +113,12 @@ def getBoxRegion(img: np.ndarray, topleft: np.ndarray, dims: np.ndarray):
 
 def getOrthHemisphereXYCoords(hemisphere: np.ndarray):
     indices = np.where(np.all(np.greater(hemisphere, np.zeros(3)), axis=-1))
-    diam = np.ceil(max(hemisphere.shape) / 2)
-    return indices[1] - diam, diam - indices[0]
+    radius = np.ceil(max(hemisphere.shape) / 2) * 0.95
+    xs = indices[1] - radius
+    ys = radius - indices[0]
+    xsNormalised = 2*radius * (xs - np.min(xs)) / np.ptp(xs) - radius
+    ysNormalised = 2*radius * (ys - np.min(ys)) / np.ptp(ys) - radius
+    return xsNormalised, ysNormalised
 
 
 def getHemispherePixels(hemisphere: np.ndarray):

@@ -1,9 +1,9 @@
 import sys
 import vtk
 import utils
+import numpy as np
 
-HEIGHT_RANGE = [-8000, 14000]
-R = 3389500
+
 sfR = 0.001
 tilt = -25
 tubeRadius = 5
@@ -20,20 +20,22 @@ class SliderCBTubeRadius:
             tf.SetRadius(value)
 
 
-ctf = vtk.vtkColorTransferFunction()
-ctf.SetColorSpaceToDiverging()
-ctf.AddRGBPoint(-8, 0, 0.1, 0.85)  # Blue
-ctf.AddRGBPoint(-5, 0.34, 0.55, 1)  # Lighter blue
-ctf.AddRGBPoint(0, 1, 1, 1)  # white
-ctf.AddRGBPoint(14, 0.99, 0.85, 0)  # Yellow
-
-
 topoFile = sys.argv[1]
 textureFile = sys.argv[2]
 
 # Read the polydata from a file
 polyReader = vtk.vtkXMLPolyDataReader()
 polyReader.SetFileName(topoFile)
+polyReader.Update()
+hMin, hMax = polyReader.GetOutput().GetPointData().GetScalars().GetRange()
+hMin, hMax = int(np.ceil(hMin) / sfR), int(np.floor(hMax) / sfR)
+
+ctf = vtk.vtkColorTransferFunction()
+ctf.SetColorSpaceToDiverging()
+ctf.AddRGBPoint(hMin * sfR, 0, 0.1, 0.85)  # Blue
+ctf.AddRGBPoint(hMin * 2 / 3 * sfR, 0.34, 0.55, 1)  # Lighter blue
+ctf.AddRGBPoint(0, 1, 1, 1)  # white
+ctf.AddRGBPoint(hMax * sfR, 0.99, 0.85, 0)  # Yellow
 
 # Read the image data from a file
 textureReader = vtk.vtkJPEGReader()
@@ -57,7 +59,7 @@ mapToSphere.PreventSeamOff()
 contour = vtk.vtkContourFilter()
 contour.SetInputConnection(mapToSphere.GetOutputPort())
 contourValues = [
-    i // 1000 for i in range(HEIGHT_RANGE[0], HEIGHT_RANGE[1] + 1000, 1000)
+    i // 1000 for i in range(hMin, hMax + 1000, 1000)
     if i != 0
 ]
 for i, v in enumerate(contourValues):
@@ -108,11 +110,23 @@ seaActor.SetMapper(seaMapper)
 seaActor.RotateX(90 + tilt)
 seaActor.GetProperty().SetColor(1, 0, 0)
 
+scalarBar = vtk.vtkScalarBarActor()
+scalarBar.SetLookupTable(contourMapper.GetLookupTable())
+scalarBar.SetTitle('Elevation (km)')
+scalarBar.UnconstrainedFontSizeOn()
+scalarBar.GetTitleTextProperty().SetLineOffset(-20)
+scalarBar.GetTitleTextProperty().SetFontSize(20)
+scalarBar.GetLabelTextProperty().SetFontSize(16)
+scalarBar.SetMaximumWidthInPixels(100)
+scalarBar.SetMaximumHeightInPixels(500)
+scalarBar.SetNumberOfLabels(len(contourValues) + 1)
+
 # Create a renderer
 renderer = vtk.vtkRenderer()
 renderer.AddActor(marsActor)
 renderer.AddActor(contourActor)
 renderer.AddActor(seaActor)
+renderer.AddActor2D(scalarBar)
 
 # Setup render window
 renderWindow = vtk.vtkRenderWindow()
