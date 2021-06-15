@@ -7,15 +7,13 @@ import sys
 
 import utils
 
-hMin, hMax = [-8200, 21229]  # Min/max elevations in m
-R = 3389500
-sfR = 0.001
+dataFile = sys.argv[1]
 
-sf = 10
+data = utils.readDataFile(dataFile)
 
-og_img = cv2.imread('data/Mars_MGS_MOLA_DEM_small.png', 0)
-width = int(og_img.shape[1] / sf)
-height = int(og_img.shape[0] / sf)
+og_img = cv2.imread(f'images/{data.topo}', 0)
+width = int(og_img.shape[1] / data.sf)
+height = int(og_img.shape[0] / data.sf)
 img = cv2.resize(og_img, (width, height), interpolation=cv2.INTER_AREA)
 img = cv2.flip(img, 0)
 
@@ -31,10 +29,10 @@ img -= np.min(img)
 # Longitudes go from -180 to +180, and latitudes go from -90 to +90
 lmbdas = (xcoords * (360 / np.max(xcoords))) - 180
 phis = (ycoords * (180 / np.max(ycoords))) - 90
-rs = img.reshape(-1) * ((hMax - hMin) / np.max(img))
-rs += hMin
+rs = img.reshape(-1) * ((data.hMax - data.hMin) / np.max(img))
+rs += data.hMin
 
-xs, ys, zs = utils.geoToCartesian(R * sfR, lmbdas, phis)
+xs, ys, zs = utils.geoToCartesian(data.R * data.sfR, lmbdas, phis)
 
 # Create sphere dataset and save as VTP file
 heightCoords = np.array([xs, ys, zs]).T
@@ -42,7 +40,7 @@ sys.setrecursionlimit(10000)
 tree = spatial.KDTree(heightCoords)
 
 sphereSource = vtk.vtkSphereSource()
-sphereSource.SetRadius(R * sfR)
+sphereSource.SetRadius(data.R * data.sfR)
 sphereSource.SetStartTheta(1e-5)
 sphereSource.SetThetaResolution(800)
 sphereSource.SetPhiResolution(800)
@@ -56,11 +54,11 @@ spherePointsArray = sphereSource.GetOutput().GetPoints().GetData()
 for i in range(numPoints):
     point = spherePointsArray.GetTuple3(i)
     heightIdx = tree.query([point])[-1][0]
-    sphereHeights.SetTuple1(i, rs[heightIdx] * sfR)
+    sphereHeights.SetTuple1(i, rs[heightIdx] * data.sfR)
 sphereSource.GetOutput().GetPointData().SetScalars(sphereHeights)
 
 vtkWriter = vtk.vtkXMLPolyDataWriter()
-vtkWriter.SetFileName('marstopoV2.vtp')
+vtkWriter.SetFileName(f'sources/{data.vtksource}')
 vtkWriter.SetInputData(sphereSource.GetOutput())
 vtkWriter.Write()
 

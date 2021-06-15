@@ -1,5 +1,6 @@
 import numpy as np
 from enum import Enum, auto
+from collections import namedtuple
 
 
 class ColorMetric(Enum):
@@ -7,6 +8,24 @@ class ColorMetric(Enum):
     L1NORM = auto()
     MSE = auto()
     MAE = auto()
+
+
+PlanetData = namedtuple('PlanetData', [
+    'hMin', 'hMax', 'R', 'tilt', 'sfR', 'sf', 'topo', 'texture', 'vtksource'
+])
+
+
+def readDataFile(filename):
+    with open(filename, 'r') as f:
+        lines = [line.strip().split(' = ') for line in f.readlines()]
+
+    for i, (_, v) in enumerate(lines):
+        try:
+            lines[i][1] = float(v)
+        except ValueError:
+            pass
+
+    return PlanetData(**dict(lines))
 
 
 def orthographic(r, lmbda, phi, lmbda0=0, phi0=0):

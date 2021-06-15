@@ -1,0 +1,9 @@
+hMin = -9178
+hMax = 10786
+R = 1737400
+tilt = 7
+sfR = 0.001
+sf = 10
+topo = Moon_DEM_small.png
+texture = moonTextureSwapped.jpg
+vtksource = moontopo.vtp
