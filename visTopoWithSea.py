@@ -115,11 +115,20 @@ seaActor.RotateY(data.tilt)
 seaActor.GetProperty().SetColor(0, 0, 0.5)
 seaActor.GetProperty().SetOpacity(0.7)
 
+# -- Text --
+titleActor = vtk.vtkTextActor()
+titleActor.SetInput(data.name)
+titleActor.GetTextProperty().SetVerticalJustificationToTop()
+titleActor.GetPositionCoordinate().SetCoordinateSystemToNormalizedDisplay()
+titleActor.GetPositionCoordinate().SetValue(0.05, 0.95)
+titleActor.GetTextProperty().SetFontSize(40)
+
 # Create a renderer
 renderer = vtk.vtkRenderer()
 renderer.AddActor(landActor)
 renderer.AddActor(underseaActor)
 renderer.AddActor(seaActor)
+renderer.AddActor(titleActor)
 
 # Setup render window
 renderWindow = vtk.vtkRenderWindow()

@@ -123,6 +123,24 @@ scalarBar.GetLabelTextProperty().SetFontSize(16)
 scalarBar.SetMaximumWidthInPixels(100)
 scalarBar.SetMaximumHeightInPixels(500)
 scalarBar.SetNumberOfLabels(len(contourValues) + 1)
+scalarBar.GetPositionCoordinate().SetCoordinateSystemToNormalizedDisplay()
+scalarBar.GetPositionCoordinate().SetValue(0.85, 0.05)
+
+# -- Text --
+titleActor = vtk.vtkTextActor()
+titleActor.SetInput(data.name)
+titleActor.GetTextProperty().SetVerticalJustificationToTop()
+titleActor.GetPositionCoordinate().SetCoordinateSystemToNormalizedDisplay()
+titleActor.GetPositionCoordinate().SetValue(0.05, 0.95)
+titleActor.GetTextProperty().SetFontSize(40)
+
+subtitleActor = vtk.vtkTextActor()
+subtitleActor.SetInput('0km elevation shown in red.')
+subtitleActor.GetTextProperty().SetJustificationToRight()
+subtitleActor.GetTextProperty().SetVerticalJustificationToTop()
+subtitleActor.GetPositionCoordinate().SetCoordinateSystemToNormalizedDisplay()
+subtitleActor.GetPositionCoordinate().SetValue(0.95, 0.95)
+subtitleActor.GetTextProperty().SetFontSize(20)
 
 # Create a renderer
 renderer = vtk.vtkRenderer()
@@ -130,6 +148,8 @@ renderer.AddActor(planetActor)
 renderer.AddActor(contourActor)
 renderer.AddActor(seaActor)
 renderer.AddActor2D(scalarBar)
+renderer.AddActor2D(titleActor)
+renderer.AddActor2D(subtitleActor)
 
 # Setup render window
 renderWindow = vtk.vtkRenderWindow()

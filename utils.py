@@ -24,7 +24,7 @@ class SliderCBScaleFactor:
 
 PlanetData = namedtuple('PlanetData', [
     'hMin', 'hMax', 'R', 'tilt', 'rot',
-    'sfR', 'sf', 'topo', 'texture', 'vtksource', 'res'
+    'sfR', 'sf', 'topo', 'texture', 'vtksource', 'res', 'name'
 ])
 
 
@@ -36,7 +36,7 @@ def readDataFile(filename):
         try:
             lines[i][1] = float(v)
         except ValueError:
-            pass
+            lines[i][1] = lines[i][1].strip('"').strip("'")
 
     return PlanetData(**dict(lines))
 

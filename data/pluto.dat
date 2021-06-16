@@ -9,3 +9,4 @@ topo = Pluto_DEM_small_filled.png
 texture = plutoTextureColorSwappedFilled.jpg
 vtksource = plutotopo.vtp
 res = 2000
+name = 'Pluto'

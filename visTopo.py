@@ -47,9 +47,18 @@ planetActor.RotateX(90)
 planetActor.RotateZ(data.rot)
 planetActor.RotateY(data.tilt)
 
+# -- Text --
+titleActor = vtk.vtkTextActor()
+titleActor.SetInput(data.name)
+titleActor.GetTextProperty().SetVerticalJustificationToTop()
+titleActor.GetPositionCoordinate().SetCoordinateSystemToNormalizedDisplay()
+titleActor.GetPositionCoordinate().SetValue(0.05, 0.95)
+titleActor.GetTextProperty().SetFontSize(40)
+
 # Create a renderer
 renderer = vtk.vtkRenderer()
 renderer.AddActor(planetActor)
+renderer.AddActor(titleActor)
 
 # Setup render window
 renderWindow = vtk.vtkRenderWindow()

@@ -9,3 +9,4 @@ topo = Moon_DEM_small.png
 texture = moonTextureSwapped.jpg
 vtksource = moontopo.vtp
 res = 2000
+name = 'The Moon'
