@@ -10,8 +10,21 @@ class ColorMetric(Enum):
     MAE = auto()
 
 
+class SliderCBScaleFactor:
+    def __init__(self, *warps):
+        self.warps = warps
+
+    def __call__(self, caller, ev):
+        slider = caller
+        value = np.around(slider.GetRepresentation().GetValue(), 1)
+        slider.GetRepresentation().SetValue(value)
+        for warp in self.warps:
+            warp.SetScaleFactor(value)
+
+
 PlanetData = namedtuple('PlanetData', [
-    'hMin', 'hMax', 'R', 'tilt', 'sfR', 'sf', 'topo', 'texture', 'vtksource'
+    'hMin', 'hMax', 'R', 'tilt', 'rot',
+    'sfR', 'sf', 'topo', 'texture', 'vtksource', 'res'
 ])
 
 

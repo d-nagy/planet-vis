@@ -15,7 +15,7 @@ class SliderCBTubeRadius:
             tf.SetRadius(value)
 
 
-tubeRadius = 5
+tubeRadius = 3
 
 dataFile = sys.argv[1]
 data = utils.readDataFile(dataFile)
@@ -79,9 +79,9 @@ tubeSea.SetNumberOfSides(6)
 tubeSea.SetRadius(tubeRadius)
 
 # Create mapper and set the mapped texture as input
-marsMapper = vtk.vtkPolyDataMapper()
-marsMapper.SetInputConnection(mapToSphere.GetOutputPort())
-marsMapper.ScalarVisibilityOff()  # Important for rendering texture properly
+planetMapper = vtk.vtkPolyDataMapper()
+planetMapper.SetInputConnection(mapToSphere.GetOutputPort())
+planetMapper.ScalarVisibilityOff()  # Important for rendering texture properly
 
 # Create mapper for contours
 contourMapper = vtk.vtkPolyDataMapper()
@@ -93,18 +93,24 @@ seaMapper = vtk.vtkPolyDataMapper()
 seaMapper.SetInputConnection(tubeSea.GetOutputPort())
 
 # Create actor and set the mapper and the texture
-marsActor = vtk.vtkActor()
-marsActor.SetMapper(marsMapper)
-marsActor.SetTexture(texture)
-marsActor.RotateX(90 - data.tilt)
+planetActor = vtk.vtkActor()
+planetActor.SetMapper(planetMapper)
+planetActor.SetTexture(texture)
+planetActor.RotateX(90)
+planetActor.RotateZ(data.rot)
+planetActor.RotateY(data.tilt)
 
 contourActor = vtk.vtkActor()
 contourActor.SetMapper(contourMapper)
-contourActor.RotateX(90 - data.tilt)
+contourActor.RotateX(90)
+contourActor.RotateZ(data.rot)
+contourActor.RotateY(data.tilt)
 
 seaActor = vtk.vtkActor()
 seaActor.SetMapper(seaMapper)
-seaActor.RotateX(90 - data.tilt)
+seaActor.RotateX(90)
+seaActor.RotateZ(data.rot)
+seaActor.RotateY(data.tilt)
 seaActor.GetProperty().SetColor(1, 0, 0)
 
 scalarBar = vtk.vtkScalarBarActor()
@@ -120,7 +126,7 @@ scalarBar.SetNumberOfLabels(len(contourValues) + 1)
 
 # Create a renderer
 renderer = vtk.vtkRenderer()
-renderer.AddActor(marsActor)
+renderer.AddActor(planetActor)
 renderer.AddActor(contourActor)
 renderer.AddActor(seaActor)
 renderer.AddActor2D(scalarBar)
@@ -146,7 +152,7 @@ renderWindow.Render()
 # -- GUI slider --
 # Make rep
 tubeRadiusSliderRep = utils.makeVtkSliderRep(
-    'Contour tube radius', 1, 10, tubeRadius, 0.05, 0.1
+    'Contour tube radius', 1, 6, tubeRadius, 0.05, 0.1
 )
 
 # Make widget

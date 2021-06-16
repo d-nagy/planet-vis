@@ -3,16 +3,6 @@ import vtk
 import utils
 
 
-class SliderCBScaleFactor:
-    def __init__(self, warpFilter):
-        self.warpFilter = warpFilter
-
-    def __call__(self, caller, ev):
-        slider = caller
-        value = slider.GetRepresentation().GetValue()
-        self.warpFilter.SetScaleFactor(value)
-
-
 dataFile = sys.argv[1]
 data = utils.readDataFile(dataFile)
 
@@ -45,19 +35,21 @@ warp.SetScaleFactor(10)
 warp.Update()
 
 # Create mapper and set the mapped texture as input
-marsMapper = vtk.vtkPolyDataMapper()
-marsMapper.SetInputConnection(warp.GetOutputPort())
-marsMapper.ScalarVisibilityOff()  # Important for rendering texture properly
+planetMapper = vtk.vtkPolyDataMapper()
+planetMapper.SetInputConnection(warp.GetOutputPort())
+planetMapper.ScalarVisibilityOff()  # Important for rendering texture properly
 
 # Create actor and set the mapper and the texture
-marsActor = vtk.vtkActor()
-marsActor.SetMapper(marsMapper)
-marsActor.SetTexture(texture)
-marsActor.RotateX(90 - data.tilt)
+planetActor = vtk.vtkActor()
+planetActor.SetMapper(planetMapper)
+planetActor.SetTexture(texture)
+planetActor.RotateX(90)
+planetActor.RotateZ(data.rot)
+planetActor.RotateY(data.tilt)
 
 # Create a renderer
 renderer = vtk.vtkRenderer()
-renderer.AddActor(marsActor)
+renderer.AddActor(planetActor)
 
 # Setup render window
 renderWindow = vtk.vtkRenderWindow()
@@ -83,7 +75,7 @@ slider = vtk.vtkSliderRepresentation2D()
 slider.SetTitleText('Relief scale factor')
 
 slider.SetMinimumValue(1)
-slider.SetMaximumValue(30)
+slider.SetMaximumValue(20)
 slider.SetValue(10)
 
 slider.GetPoint1Coordinate().SetCoordinateSystemToNormalizedDisplay()
@@ -97,7 +89,7 @@ sfSlider.SetInteractor(interactor)
 sfSlider.SetRepresentation(slider)
 sfSlider.SetAnimationModeToJump()
 sfSlider.EnabledOn()
-cb = SliderCBScaleFactor(warp)
+cb = utils.SliderCBScaleFactor(warp)
 sfSlider.AddObserver(vtk.vtkCommand.InteractionEvent, cb)
 
 interactor.Initialize()

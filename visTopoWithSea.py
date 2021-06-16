@@ -4,17 +4,6 @@ import utils
 import numpy as np
 
 
-class SliderCBScaleFactor:
-    def __init__(self, *warps):
-        self.warps = warps
-
-    def __call__(self, caller, ev):
-        slider = caller
-        value = slider.GetRepresentation().GetValue()
-        for warp in self.warps:
-            warp.SetScaleFactor(value)
-
-
 class SliderCBSeaLevel:
     def __init__(self, clipper):
         self.clipper = clipper
@@ -25,7 +14,7 @@ class SliderCBSeaLevel:
         self.clipper.SetValue(value)
 
 
-warpScale = 10
+warpScale = 1
 
 dataFile = sys.argv[1]
 data = utils.readDataFile(dataFile)
@@ -106,17 +95,23 @@ seaMapper.ScalarVisibilityOff()
 landActor = vtk.vtkActor()
 landActor.SetMapper(landMapper)
 landActor.SetTexture(texture)
-landActor.RotateX(90 - data.tilt)
+landActor.RotateX(90)
+landActor.RotateZ(data.rot)
+landActor.RotateY(data.tilt)
 
 underseaActor = vtk.vtkActor()
 underseaActor.SetMapper(underseaMapper)
 underseaActor.SetTexture(texture)
-underseaActor.RotateX(90 - data.tilt)
+underseaActor.RotateX(90)
+underseaActor.RotateZ(data.rot)
+underseaActor.RotateY(data.tilt)
 
 # Create actor for the sea
 seaActor = vtk.vtkActor()
 seaActor.SetMapper(seaMapper)
-seaActor.RotateX(90 - data.tilt)
+seaActor.RotateX(90)
+seaActor.RotateZ(data.rot)
+seaActor.RotateY(data.tilt)
 seaActor.GetProperty().SetColor(0, 0, 0.5)
 seaActor.GetProperty().SetOpacity(0.7)
 
@@ -147,7 +142,7 @@ renderWindow.Render()
 # -- GUI slider --
 # Make rep
 sfSliderRep = utils.makeVtkSliderRep(
-    'Relief scale factor', 1, 30, warpScale, 0.05, 0.1
+    'Relief scale factor', 1, 20, warpScale, 0.05, 0.1
 )
 
 # Make widget
@@ -156,7 +151,7 @@ sfSlider.SetInteractor(interactor)
 sfSlider.SetRepresentation(sfSliderRep)
 sfSlider.SetAnimationModeToJump()
 sfSlider.EnabledOn()
-cb = SliderCBScaleFactor(warpAboveSea, warpBelowSea)
+cb = utils.SliderCBScaleFactor(warpAboveSea, warpBelowSea)
 sfSlider.AddObserver(vtk.vtkCommand.InteractionEvent, cb)
 
 seaLevelSliderRep = utils.makeVtkSliderRep(
