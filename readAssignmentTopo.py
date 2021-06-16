@@ -6,6 +6,12 @@ import vtk
 
 import utils
 
+'''
+Create the sphere dataset for the original assignment, using a NASA image
+consisting of orthographically projected relief maps of Mars West and East
+hemispheres.
+'''
+
 heightRange = np.array([-8000, 14000])
 R = 3389500
 sfR = 0.001

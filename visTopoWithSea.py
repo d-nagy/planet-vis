@@ -5,6 +5,9 @@ import numpy as np
 
 
 class SliderCBSeaLevel:
+    '''
+    Callback for VTK slider that controls the visualised sea level.
+    '''
     def __init__(self, clipper):
         self.clipper = clipper
 
@@ -16,8 +19,12 @@ class SliderCBSeaLevel:
 
 warpScale = 1
 
+# Open and load planet config from file
 dataFile = sys.argv[1]
 data = utils.readDataFile(dataFile)
+
+# Calculate min and max elevations rounded to nearest km for making the
+# isolines
 hMin = int(np.ceil(data.hMin / 1000)) * 1000
 hMax = int(np.floor(data.hMax / 1000)) * 1000
 
@@ -26,6 +33,8 @@ polyReader = vtk.vtkXMLPolyDataReader()
 polyReader.SetFileName(f'sources/{data.vtksource}')
 polyReader.Update()
 
+# Set polydata vectors to be sphere normals. These will be used in the
+# WarpVector filters.
 normalVectors = vtk.vtkFloatArray()
 normalVectors.DeepCopy(polyReader.GetOutput().GetPointData().GetNormals())
 normalVectors.SetName('NormalVectors')
@@ -72,9 +81,10 @@ warpBelowSea = vtk.vtkWarpScalar()
 warpBelowSea.SetInputConnection(clip.GetOutputPort(1))  # Below the sea
 warpBelowSea.SetScaleFactor(warpScale)
 
-sinkSea = vtk.vtkWarpVector()
-sinkSea.SetInputConnection(clip.GetOutputPort(1))
-sinkSea.SetScaleFactor(5)
+# Raise sea slightly above the terrain to avoid nasty clipping
+sea = vtk.vtkWarpVector()
+sea.SetInputConnection(clip.GetOutputPort(1))
+sea.SetScaleFactor(5)
 
 # Create mapper and set the mapped texture as input
 landMapper = vtk.vtkPolyDataMapper()
@@ -88,10 +98,10 @@ underseaMapper.ScalarVisibilityOff()
 
 # Create mapper for sea
 seaMapper = vtk.vtkPolyDataMapper()
-seaMapper.SetInputConnection(sinkSea.GetOutputPort())
+seaMapper.SetInputConnection(sea.GetOutputPort())
 seaMapper.ScalarVisibilityOff()
 
-# Create actor and set the mapper and the texture
+# Create actors and set mappers and textures for terrain
 landActor = vtk.vtkActor()
 landActor.SetMapper(landMapper)
 landActor.SetTexture(texture)
@@ -115,7 +125,7 @@ seaActor.RotateY(data.tilt)
 seaActor.GetProperty().SetColor(0, 0, 0.5)
 seaActor.GetProperty().SetOpacity(0.7)
 
-# -- Text --
+# Create a title that displays the planet name
 titleActor = vtk.vtkTextActor()
 titleActor.SetInput(data.name)
 titleActor.GetTextProperty().SetVerticalJustificationToTop()
@@ -148,13 +158,12 @@ activeCam.SetRoll(180)
 
 renderWindow.Render()
 
-# -- GUI slider --
-# Make rep
+# -- GUI sliders --
+# Slider for topography scaling
 sfSliderRep = utils.makeVtkSliderRep(
     'Relief scale factor', 1, 20, warpScale, 0.05, 0.1
 )
 
-# Make widget
 sfSlider = vtk.vtkSliderWidget()
 sfSlider.SetInteractor(interactor)
 sfSlider.SetRepresentation(sfSliderRep)
@@ -163,6 +172,7 @@ sfSlider.EnabledOn()
 cb = utils.SliderCBScaleFactor(warpAboveSea, warpBelowSea)
 sfSlider.AddObserver(vtk.vtkCommand.InteractionEvent, cb)
 
+# Slider for sea level
 seaLevelSliderRep = utils.makeVtkSliderRep(
     'Sea Level (km)', hMin / 1000, hMax / 1000, 0, 0.05, 0.3
 )

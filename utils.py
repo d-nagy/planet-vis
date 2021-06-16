@@ -11,6 +11,10 @@ class ColorMetric(Enum):
 
 
 class SliderCBScaleFactor:
+    '''
+    Callback for VTK slider that controls the scale factor for the
+    topographical warping.
+    '''
     def __init__(self, *warps):
         self.warps = warps
 
@@ -29,6 +33,7 @@ PlanetData = namedtuple('PlanetData', [
 
 
 def readDataFile(filename):
+    '''Read config file for visualising a planet/celestial body'''
     with open(filename, 'r') as f:
         lines = [line.strip().split(' = ') for line in f.readlines()]
 
@@ -99,11 +104,18 @@ def geoToCartesian(r, lmbda, phi):
 
 
 def stableUnique(arr: np.ndarray, axis: int):
+    '''Return unique elements of arr without changing their order.'''
     u, idx = np.unique(arr, axis=axis, return_index=True)
     return arr[np.sort(idx)]
 
 
 def interpColormap(colormap: np.ndarray, pointsPerSample: int, isHsv=False):
+    '''
+    Increase number of colours in colormap by interpolating between colors.
+
+    Between each pair of adjacent colors in the given colormap, compute
+    `pointsPerSample` more by linear interpolation.
+    '''
     if isHsv:
         limits = [180, 256, 256]
     else:
@@ -137,6 +149,7 @@ def interpColormap(colormap: np.ndarray, pointsPerSample: int, isHsv=False):
 
 
 def getBoxRegion(img: np.ndarray, topleft: np.ndarray, dims: np.ndarray):
+    '''Return a rectangular region of the input image (given as 2D array)'''
     return img[
         topleft[1]:(topleft+dims)[1],
         topleft[0]:(topleft+dims)[0]
@@ -161,6 +174,14 @@ def getHemispherePixels(hemisphere: np.ndarray):
 
 def findNearestColorIdx(colors: np.ndarray, colormap: np.ndarray,
                         metric=ColorMetric.L1NORM, weights=[1, 1, 1]):
+    '''
+    For each color given in a list, find the color in the given colormap
+    that it closest resembles and return the index of that color in the
+    colormap.
+
+    Finding the "closest" color can be done using multiple metrics and with
+    weightings for the different color channels present.
+    '''
     if metric == ColorMetric.L2NORM:
         idx = np.linalg.norm(
             (colormap[np.newaxis, :, :] - colors[:, np.newaxis, :]) * weights,
@@ -196,11 +217,20 @@ def findNearestColorIdx(colors: np.ndarray, colormap: np.ndarray,
 
 
 def getHeightFromCmapIdx(idx, colormap, heightRange):
+    '''
+    Given an index into a colormap, and minimum and maximum heights, return
+    the height value that the colormap color (defined by the index) corresponds
+    to.
+    '''
     start, stop = heightRange
     return np.linspace(start, stop, len(colormap))[idx]
 
 
 def makeVtkSliderRep(title, minValue, maxValue, startValue, x, y):
+    '''
+    Create a VTK slider representation with a caption, minimum and maximum
+    values, initial value and position.
+    '''
     import vtk
     slider = vtk.vtkSliderRepresentation2D()
     slider.SetTitleText(title)

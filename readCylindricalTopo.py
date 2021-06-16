@@ -7,10 +7,11 @@ import sys
 
 import utils
 
+# Open and load config from file.
 dataFile = sys.argv[1]
-
 data = utils.readDataFile(dataFile)
 
+# Open and preprocess topographic map.
 og_img = cv2.imread(f'images/{data.topo}', 0)
 width = int(og_img.shape[1] / data.sf)
 height = int(og_img.shape[0] / data.sf)
@@ -19,19 +20,26 @@ img = cv2.flip(img, 0)
 
 del og_img
 
+# We need longitudes (lmbdas) and latitudes (phis) from the topographic map
+# to be able to convert them to 3D cartesian coordinates.
+
+# In our equirectangularly projected topographic map, x and y coords are
+# longitudes and latitudes respectively, so just need to scale them to
+# appropriate ranges.
+
 ycoords, xcoords = np.where(img >= 0)
 
-img -= np.min(img)
-
-# In equirectangular projection, x and y coords are longitudes and latitudes
-# respectively, so just need to scale them to appropriate ranges.
-
-# Longitudes go from -180 to +180, and latitudes go from -90 to +90
+# Longitudes go from -180 to +180
 lmbdas = (xcoords * (360 / np.max(xcoords))) - 180
+# Latitudes go from -90 to +90
 phis = (ycoords * (180 / np.max(ycoords))) - 90
+
+# Get elevations from the topographic map
+img -= np.min(img)
 rs = img.reshape(-1) * ((data.hMax - data.hMin) / np.max(img))
 rs += data.hMin
 
+# Compute cartesian coordinates of planet surface points.
 xs, ys, zs = utils.geoToCartesian(data.R * data.sfR, lmbdas, phis)
 
 # Create sphere dataset and save as VTP file

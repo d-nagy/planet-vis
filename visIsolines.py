@@ -5,6 +5,9 @@ import numpy as np
 
 
 class SliderCBTubeRadius:
+    '''
+    Callback for VTK slider that controls the contour tube radii.
+    '''
     def __init__(self, *tubeFilters):
         self.tubeFilters = tubeFilters
 
@@ -17,6 +20,7 @@ class SliderCBTubeRadius:
 
 tubeRadius = 3
 
+# Open and load planet config from file
 dataFile = sys.argv[1]
 data = utils.readDataFile(dataFile)
 hMin = int(np.ceil(data.hMin / 1000)) * 1000
@@ -92,7 +96,7 @@ contourMapper.SetLookupTable(ctf)
 seaMapper = vtk.vtkPolyDataMapper()
 seaMapper.SetInputConnection(tubeSea.GetOutputPort())
 
-# Create actor and set the mapper and the texture
+# Create actors, set mappers and textures
 planetActor = vtk.vtkActor()
 planetActor.SetMapper(planetMapper)
 planetActor.SetTexture(texture)
@@ -113,6 +117,7 @@ seaActor.RotateZ(data.rot)
 seaActor.RotateY(data.tilt)
 seaActor.GetProperty().SetColor(1, 0, 0)
 
+# Create legend for contour line colors.
 scalarBar = vtk.vtkScalarBarActor()
 scalarBar.SetLookupTable(contourMapper.GetLookupTable())
 scalarBar.SetTitle('Elevation (km)')
@@ -126,7 +131,7 @@ scalarBar.SetNumberOfLabels(len(contourValues) + 1)
 scalarBar.GetPositionCoordinate().SetCoordinateSystemToNormalizedDisplay()
 scalarBar.GetPositionCoordinate().SetValue(0.85, 0.05)
 
-# -- Text --
+# Create a title that displays the planet name
 titleActor = vtk.vtkTextActor()
 titleActor.SetInput(data.name)
 titleActor.GetTextProperty().SetVerticalJustificationToTop()
@@ -134,6 +139,7 @@ titleActor.GetPositionCoordinate().SetCoordinateSystemToNormalizedDisplay()
 titleActor.GetPositionCoordinate().SetValue(0.05, 0.95)
 titleActor.GetTextProperty().SetFontSize(40)
 
+# Add caption to inform user of the red 0km elevation contour
 subtitleActor = vtk.vtkTextActor()
 subtitleActor.SetInput('0km elevation shown in red.')
 subtitleActor.GetTextProperty().SetJustificationToRight()

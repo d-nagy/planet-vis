@@ -2,7 +2,7 @@ import sys
 import vtk
 import utils
 
-
+# Open and load planet config from file
 dataFile = sys.argv[1]
 data = utils.readDataFile(dataFile)
 
@@ -47,7 +47,7 @@ planetActor.RotateX(90)
 planetActor.RotateZ(data.rot)
 planetActor.RotateY(data.tilt)
 
-# -- Text --
+# Create a title that displays the planet name
 titleActor = vtk.vtkTextActor()
 titleActor.SetInput(data.name)
 titleActor.GetTextProperty().SetVerticalJustificationToTop()
