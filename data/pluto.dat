@@ -1,0 +1,11 @@
+hMin = -4101
+hMax = 6491
+R = 1188300
+tilt = 30
+rot = 110
+sfR = 0.001
+sf = 6
+topo = Pluto_DEM_small_filled.png
+texture = plutoTextureColorSwappedFilled.jpg
+vtksource = plutotopo.vtp
+res = 2000
