@@ -8,7 +8,7 @@ import utils
 
 '''
 Create the sphere dataset for the original assignment, using a NASA image
-consisting of orthographically projected relief maps of Mars West and East
+consisting of orthographically projected relief maps of Mars' West and East
 hemispheres.
 '''
 
