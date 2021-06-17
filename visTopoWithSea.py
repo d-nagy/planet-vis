@@ -42,8 +42,11 @@ polyReader.GetOutput().GetPointData().SetVectors(normalVectors)
 polyReader.Update()
 
 # Read the image data from a file
-textureReader = vtk.vtkJPEGReader()
-textureReader.SetFileName(f'images/{data.texture}')
+textureFilename = f'images/{data.texture}'
+readerFactory = vtk.vtkImageReader2Factory()
+textureReader = readerFactory.CreateImageReader2(textureFilename)
+textureReader.SetFileName(textureFilename)
+textureReader.Update()
 
 # Flip the image for texture mapping
 flip = vtk.vtkImageFlip()
@@ -112,16 +115,12 @@ landActor.RotateY(data.tilt)
 underseaActor = vtk.vtkActor()
 underseaActor.SetMapper(underseaMapper)
 underseaActor.SetTexture(texture)
-underseaActor.RotateX(90)
-underseaActor.RotateZ(data.rot)
-underseaActor.RotateY(data.tilt)
+underseaActor.SetUserMatrix(landActor.GetMatrix())
 
 # Create actor for the sea
 seaActor = vtk.vtkActor()
 seaActor.SetMapper(seaMapper)
-seaActor.RotateX(90)
-seaActor.RotateZ(data.rot)
-seaActor.RotateY(data.tilt)
+seaActor.SetUserMatrix(landActor.GetMatrix())
 seaActor.GetProperty().SetColor(0, 0, 0.5)
 seaActor.GetProperty().SetOpacity(0.7)
 
@@ -133,12 +132,26 @@ titleActor.GetPositionCoordinate().SetCoordinateSystemToNormalizedDisplay()
 titleActor.GetPositionCoordinate().SetValue(0.05, 0.95)
 titleActor.GetTextProperty().SetFontSize(40)
 
+# Create a line that goes through the poles of the planet
+line = vtk.vtkLineSource()
+line.SetPoint1(0, 0, data.R * data.sfR * 1.1)
+line.SetPoint2(0, 0, data.R * data.sfR * -1.1)
+
+lineMapper = vtk.vtkPolyDataMapper()
+lineMapper.SetInputConnection(line.GetOutputPort())
+
+lineActor = vtk.vtkActor()
+lineActor.SetMapper(lineMapper)
+lineActor.GetProperty().SetLineWidth(2)
+lineActor.SetUserMatrix(landActor.GetMatrix())
+
 # Create a renderer
 renderer = vtk.vtkRenderer()
 renderer.AddActor(landActor)
 renderer.AddActor(underseaActor)
 renderer.AddActor(seaActor)
 renderer.AddActor(titleActor)
+renderer.AddActor(lineActor)
 
 # Setup render window
 renderWindow = vtk.vtkRenderWindow()
@@ -174,7 +187,7 @@ sfSlider.AddObserver(vtk.vtkCommand.InteractionEvent, cb)
 
 # Slider for sea level
 seaLevelSliderRep = utils.makeVtkSliderRep(
-    'Sea Level (km)', hMin / 1000, hMax / 1000, 0, 0.05, 0.3
+    'Sea Level (km)', hMin / 1000, hMax / 1000, 0, 0.05, 0.25
 )
 
 seaLevelSlider = vtk.vtkSliderWidget()

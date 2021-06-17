@@ -39,8 +39,11 @@ ctf.AddRGBPoint(0, 1, 1, 1)  # white
 ctf.AddRGBPoint(hMax / 1000, 0.99, 0.85, 0)  # Yellow
 
 # Read the image data from a file
-textureReader = vtk.vtkJPEGReader()
-textureReader.SetFileName(f'images/{data.texture}')
+textureFilename = f'images/{data.texture}'
+readerFactory = vtk.vtkImageReader2Factory()
+textureReader = readerFactory.CreateImageReader2(textureFilename)
+textureReader.SetFileName(textureFilename)
+textureReader.Update()
 
 # Flip the image for texture mapping
 flip = vtk.vtkImageFlip()
@@ -106,15 +109,11 @@ planetActor.RotateY(data.tilt)
 
 contourActor = vtk.vtkActor()
 contourActor.SetMapper(contourMapper)
-contourActor.RotateX(90)
-contourActor.RotateZ(data.rot)
-contourActor.RotateY(data.tilt)
+contourActor.SetUserMatrix(planetActor.GetMatrix())
 
 seaActor = vtk.vtkActor()
 seaActor.SetMapper(seaMapper)
-seaActor.RotateX(90)
-seaActor.RotateZ(data.rot)
-seaActor.RotateY(data.tilt)
+seaActor.SetUserMatrix(planetActor.GetMatrix())
 seaActor.GetProperty().SetColor(1, 0, 0)
 
 # Create legend for contour line colors.
@@ -148,6 +147,19 @@ subtitleActor.GetPositionCoordinate().SetCoordinateSystemToNormalizedDisplay()
 subtitleActor.GetPositionCoordinate().SetValue(0.95, 0.95)
 subtitleActor.GetTextProperty().SetFontSize(20)
 
+# Create a line that goes through the poles of the planet
+line = vtk.vtkLineSource()
+line.SetPoint1(0, 0, data.R * data.sfR * 1.1)
+line.SetPoint2(0, 0, data.R * data.sfR * -1.1)
+
+lineMapper = vtk.vtkPolyDataMapper()
+lineMapper.SetInputConnection(line.GetOutputPort())
+
+lineActor = vtk.vtkActor()
+lineActor.SetMapper(lineMapper)
+lineActor.GetProperty().SetLineWidth(2)
+lineActor.SetUserMatrix(planetActor.GetMatrix())
+
 # Create a renderer
 renderer = vtk.vtkRenderer()
 renderer.AddActor(planetActor)
@@ -156,6 +168,7 @@ renderer.AddActor(seaActor)
 renderer.AddActor2D(scalarBar)
 renderer.AddActor2D(titleActor)
 renderer.AddActor2D(subtitleActor)
+renderer.AddActor(lineActor)
 
 # Setup render window
 renderWindow = vtk.vtkRenderWindow()

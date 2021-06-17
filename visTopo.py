@@ -11,8 +11,11 @@ polyReader = vtk.vtkXMLPolyDataReader()
 polyReader.SetFileName(f'sources/{data.vtksource}')
 
 # Read the image data from a file
-textureReader = vtk.vtkJPEGReader()
-textureReader.SetFileName(f'images/{data.texture}')
+textureFilename = f'images/{data.texture}'
+readerFactory = vtk.vtkImageReader2Factory()
+textureReader = readerFactory.CreateImageReader2(textureFilename)
+textureReader.SetFileName(textureFilename)
+textureReader.Update()
 
 # Flip the image for texture mapping
 flip = vtk.vtkImageFlip()
@@ -55,10 +58,24 @@ titleActor.GetPositionCoordinate().SetCoordinateSystemToNormalizedDisplay()
 titleActor.GetPositionCoordinate().SetValue(0.05, 0.95)
 titleActor.GetTextProperty().SetFontSize(40)
 
+# Create a line that goes through the poles of the planet
+line = vtk.vtkLineSource()
+line.SetPoint1(0, 0, data.R * data.sfR * 1.1)
+line.SetPoint2(0, 0, data.R * data.sfR * -1.1)
+
+lineMapper = vtk.vtkPolyDataMapper()
+lineMapper.SetInputConnection(line.GetOutputPort())
+
+lineActor = vtk.vtkActor()
+lineActor.SetMapper(lineMapper)
+lineActor.GetProperty().SetLineWidth(2)
+lineActor.SetUserMatrix(planetActor.GetMatrix())
+
 # Create a renderer
 renderer = vtk.vtkRenderer()
 renderer.AddActor(planetActor)
 renderer.AddActor(titleActor)
+renderer.AddActor(lineActor)
 
 # Setup render window
 renderWindow = vtk.vtkRenderWindow()
