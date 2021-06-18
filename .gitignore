@@ -1,7 +1,6 @@
 .vscode/
 __pycache__/
-dev/
-images/*
+screenshots/
 *.png
 *.tif
 *.jpg
