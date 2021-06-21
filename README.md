@@ -69,6 +69,12 @@ as well as the equirectangularly projected textures for the visualisations, shou
 
 `links.txt` includes references to such image files that were used to create the included VTK datasets and the visualisations in the screenshots.
 
+For the visualisations showcased here, the images were pre-processed as follows:
+
+1. Convert to JPG/PNG (if original was TIFF file).
+2. Ensure both the texture and elevation maps for a planet correspond (may need to swap left and right halves of an image for example).
+3. Fill in any missing data (as in Pluto data) with an average colour from the rest of the image. This is especially important for missing elevation data, so that colours are correctly mapped to heights.
+
 ## `sources/`: VTK datasets (data sources)
 
 This folder contains pre-computed VTK datasets for visualising Mars, the Moon and Pluto. These

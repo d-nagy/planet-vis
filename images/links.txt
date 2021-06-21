@@ -1,0 +1,23 @@
+Mars
+----
+Texture: 
+(Website) http://planetpixelemporium.com/mars5672.html
+(Download 10K image) http://planetpixelemporium.com/download/download.php?5672/mars_10k_color.jpg
+
+Elevation:
+https://astrogeology.usgs.gov/search/details/Mars/GlobalSurveyor/MOLA/Mars_MGS_MOLA_DEM_mosaic_global_463m/cub
+
+
+The Moon
+--------
+Texture and elevation:
+https://svs.gsfc.nasa.gov/cgi-bin/details.cgi?aid=4720&button=recent
+
+
+Pluto
+-----
+Texture:
+https://www.nasa.gov/image-feature/pluto-global-color-map
+
+Elevation:
+https://astrogeology.usgs.gov/search/map/Pluto/NewHorizons/Pluto_NewHorizons_Global_DEM_300m_Jul2017
